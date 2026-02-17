@@ -1,0 +1,461 @@
+-- Banana Premium Menu for Blox Fruits
+-- Credit: Ngọc Bổng Gaming
+
+-- Kiểm tra và load thư viện
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("BANANA PREMIUM", "Sentinel")
+
+-- Thông báo khi load thành công
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Banana Premium",
+    Text = "Đã tải thành công! Nhấn RightShift để mở menu",
+    Duration = 3
+})
+
+-- Main Tabs
+local Tab1 = Window:NewTab("Cày Level")
+local Tab2 = Window:NewTab("Auto Farm")
+local Tab3 = Window:NewTab("Boss")
+local Tab4 = Window:NewTab("Đảo & Di Chuyển")
+local Tab5 = Window:NewTab("Event")
+local Tab6 = Window:NewTab("ESP")
+local Tab7 = Window:NewTab("Misc")
+
+-- Section 1: Cày Level
+local Section1 = Tab1:NewSection("CÀY LEVEL")
+Section1:NewLabel("Nhận nhiệm vụ ẩn tự động")
+
+-- Auto Quest
+getgenv().AutoQuest = false
+Section1:NewToggle("Tự động nhận nhiệm vụ", "Tự động nhận quest ở đảo mới", function(state)
+    getgenv().AutoQuest = state
+    while getgenv().AutoQuest do
+        pcall(function()
+            -- Tự động nhận quest
+            local args = {
+                [1] = "StartQuest",
+                [2] = "JungleQuest"
+            }
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+        end)
+        task.wait(0.5)
+    end
+end)
+
+-- Auto Farm Level
+getgenv().AutoFarmLevel = false
+Section1:NewToggle("Tự động đánh quái gần nhất", "Auto farm quái gần", function(state)
+    getgenv().AutoFarmLevel = state
+    while getgenv().AutoFarmLevel do
+        pcall(function()
+            -- Auto attack logic
+            local combatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
+            local target = combatFramework.getTarget()
+            if target then
+                combatFramework.attack(target)
+            end
+        end)
+        task.wait(0.1)
+    end
+end)
+
+-- Section 2: Boss Farm
+local Section2 = Tab3:NewSection("BOSS FARM")
+Section2:NewLabel("Đánh Boss theo đảo")
+
+-- Boss locations
+local bossLocations = {
+    ["JUNGLE PIRATE"] = CFrame.new(-1619.44287, 37.9151192, -297.889069),
+    ["VILLAGE"] = CFrame.new(-789.459656, 73.3670502, 1410.42334),
+    ["MIDDLE TOWN"] = CFrame.new(274.789276, 78.9150848, 953.534424),
+    ["FROZEN VILLAGE"] = CFrame.new(1114.31091, 144.871796, 1451.22278),
+    ["JEAN-LUC ISLAND"] = CFrame.new(2716.85107, 7.39842081, 48.4102364),
+    ["MARINE FORTRESS"] = CFrame.new(-3847.56519, 20.823019, 2041.55042),
+    ["JUNGLE"] = CFrame.new(-1619.44287, 37.9151192, -297.889069),
+    ["PRISON"] = CFrame.new(4901.20898, 1.28183782, -1269.40173),
+    ["MAGMA VILLAGE"] = CFrame.new(-5224.85596, 50.2374306, 4316.18213),
+    ["UNDERWATER CITY"] = CFrame.new(3864.96729, 125.676888, -1924.07214),
+    ["UPPER SKYLANDS"] = CFrame.new(-5005.19531, 317.868896, -3122.24243)
+}
+
+for location, cframe in pairs(bossLocations) do
+    Section2:NewButton("Đánh Boss "..location, "Tự động tìm và đánh boss", function()
+        getgenv().AutoBoss = true
+        while getgenv().AutoBoss do
+            pcall(function()
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if character then
+                    character.HumanoidRootPart.CFrame = cframe
+                    task.wait(3)
+                    -- Auto attack boss
+                    local combatFramework = require(player.PlayerScripts.CombatFramework)
+                    combatFramework.attack()
+                end
+            end)
+            task.wait(0.5)
+        end
+    end)
+end
+
+-- Section 3: Auto Ship & Island
+local Section4 = Tab4:NewSection("TÀU & ĐẢO")
+
+getgenv().AutoFindMirage = false
+Section4:NewToggle("Tự động tìm đảo bí ẩn", "Auto tìm Mirage Island", function(state)
+    getgenv().AutoFindMirage = state
+    while getgenv().AutoFindMirage do
+        pcall(function()
+            -- Auto sail logic
+            local ship = workspace:FindFirstChild("Ships") or workspace:FindFirstChild("Boats")
+            if ship then
+                -- Find Mirage Island logic
+                local mirage = workspace:FindFirstChild("Mirage Island")
+                if mirage then
+                    local player = game.Players.LocalPlayer
+                    player.Character.HumanoidRootPart.CFrame = mirage.PrimaryPart.CFrame + Vector3.new(0,50,0)
+                end
+            end
+        end)
+        task.wait(1)
+    end
+end)
+
+getgenv().AutoLookMoon = false
+Section4:NewToggle("Tự động nhìn trăng", "Auto Look At Moon", function(state)
+    getgenv().AutoLookMoon = state
+    while getgenv().AutoLookMoon do
+        pcall(function()
+            local moon = workspace:FindFirstChild("Moon")
+            if moon then
+                local player = game.Players.LocalPlayer
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position, moon.Position)
+            end
+        end)
+        task.wait(0.5)
+    end
+end)
+
+getgenv().AutoCollectGear = false
+Section4:NewToggle("Tự động nhặt bánh răng", "Auto Collect Gear", function(state)
+    getgenv().AutoCollectGear = state
+    while getgenv().AutoCollectGear do
+        pcall(function()
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v.Name == "Gear" and v:IsA("Part") then
+                    local player = game.Players.LocalPlayer
+                    player.Character.HumanoidRootPart.CFrame = v.CFrame
+                    firetouchinterest(player.Character.HumanoidRootPart, v, 0)
+                    task.wait(0.3)
+                end
+            end
+        end)
+        task.wait(0.5)
+    end
+end)
+
+getgenv().AutoPullLever = false
+Section4:NewToggle("Tự động gạt cần", "Auto Pull Lever", function(state)
+    getgenv().AutoPullLever = state
+    while getgenv().AutoPullLever do
+        pcall(function()
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v.Name == "Lever" and v:IsA("Part") then
+                    local player = game.Players.LocalPlayer
+                    player.Character.HumanoidRootPart.CFrame = v.CFrame
+                    firetouchinterest(player.Character.HumanoidRootPart, v, 0)
+                    task.wait(0.3)
+                end
+            end
+        end)
+        task.wait(0.5)
+    end
+end)
+
+-- Section 4: Event Features
+local Section5 = Tab5:NewSection("EVENT FEATURES")
+
+getgenv().AutoPirateRaid = false
+Section5:NewToggle("Auto Pirate Raid", "Tự động tham gia Pirate Raid", function(state)
+    getgenv().AutoPirateRaid = state
+    while getgenv().AutoPirateRaid do
+        pcall(function()
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("PirateRaid", "Start")
+        end)
+        task.wait(5)
+    end
+end)
+
+getgenv().AutoEctoplasm = false
+Section5:NewToggle("Auto Farm Ectoplasm", "Tự động farm Ectoplasm", function(state)
+    getgenv().AutoEctoplasm = state
+    while getgenv().AutoEctoplasm do
+        pcall(function()
+            -- Farm Ectoplasm logic
+            local args = {[1] = "Ectoplasm", [2] = "Buy"}
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+        end)
+        task.wait(1)
+    end
+end)
+
+getgenv().AutoValentine = false
+Section5:NewToggle("Auto Valentine Gacha", "Tự động quay Valentine", function(state)
+    getgenv().AutoValentine = state
+    while getgenv().AutoValentine do
+        pcall(function()
+            local args = {[1] = "ValentineGacha", [2] = "Roll"}
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+        end)
+        task.wait(1)
+    end
+end)
+
+getgenv().AutoFarmHeart = false
+Section5:NewToggle("Auto Farm Heart", "Tự động farm Heart", function(state)
+    getgenv().AutoFarmHeart = state
+    while getgenv().AutoFarmHeart do
+        pcall(function()
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v.Name == "Heart" and v:IsA("Part") then
+                    local player = game.Players.LocalPlayer
+                    player.Character.HumanoidRootPart.CFrame = v.CFrame
+                    firetouchinterest(player.Character.HumanoidRootPart, v, 0)
+                    task.wait(0.3)
+                end
+            end
+        end)
+        task.wait(0.5)
+    end
+end)
+
+getgenv().AutoAcceptHeart = false
+Section5:NewToggle("Auto Accept Heart Delivery", "Tự động nhận Heart Delivery", function(state)
+    getgenv().AutoAcceptHeart = state
+    while getgenv().AutoAcceptHeart do
+        pcall(function()
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AcceptHeartDelivery")
+        end)
+        task.wait(1)
+    end
+end)
+
+getgenv().AutoCompleteHeart = false
+Section5:NewToggle("Auto Complete Heart Delivery", "Tự động hoàn thành Heart Delivery", function(state)
+    getgenv().AutoCompleteHeart = state
+    while getgenv().AutoCompleteHeart do
+        pcall(function()
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CompleteHeartDelivery")
+        end)
+        task.wait(1)
+    end
+end)
+
+-- Section 5: ESP Features
+local Section6 = Tab6:NewSection("ESP")
+
+getgenv().EspBerry = false
+Section6:NewToggle("ESP Berry", "Hiện Berry", function(state)
+    getgenv().EspBerry = state
+    -- ESP logic for Berry
+end)
+
+getgenv().EspPlayer = false
+Section6:NewToggle("ESP Player", "Hiện người chơi", function(state)
+    getgenv().EspPlayer = state
+    -- ESP logic for Players
+end)
+
+getgenv().EspChest = false
+Section6:NewToggle("ESP Chest", "Hiện rương", function(state)
+    getgenv().EspChest = state
+    -- ESP logic for Chests
+end)
+
+getgenv().EspFruit = false
+Section6:NewToggle("ESP Fruit", "Hiện trái ác quỷ", function(state)
+    getgenv().EspFruit = state
+    -- ESP logic for Fruits
+end)
+
+getgenv().EspIsland = false
+Section6:NewToggle("ESP Island", "Hiện đảo", function(state)
+    getgenv().EspIsland = state
+    -- ESP logic for Islands
+end)
+
+getgenv().EspFlower = false
+Section6:NewToggle("ESP Flower", "Hiện hoa", function(state)
+    getgenv().EspFlower = state
+    -- ESP logic for Flowers
+end)
+
+getgenv().EspLegendarySword = false
+Section6:NewToggle("ESP Legendary Sword", "Hiện kiếm huyền thoại", function(state)
+    getgenv().EspLegendarySword = state
+    -- ESP logic for Legendary Swords
+end)
+
+getgenv().EspHakiColor = false
+Section6:NewToggle("ESP Haki Color", "Hiện Haki Color", function(state)
+    getgenv().EspHakiColor = state
+    -- ESP logic for Haki Colors
+end)
+
+getgenv().EspGear = false
+Section6:NewToggle("ESP Gear", "Hiện bánh răng", function(state)
+    getgenv().EspGear = state
+    -- ESP logic for Gears
+end)
+
+getgenv().EspSeaEvent = false
+Section6:NewToggle("ESP SeaEvent Island", "Hiện SeaEvent Island", function(state)
+    getgenv().EspSeaEvent = state
+    -- ESP logic for SeaEvent Islands
+end)
+
+getgenv().EspAdvancedDealer = false
+Section6:NewToggle("ESP Advanced Dealer", "Hiện Advanced Dealer", function(state)
+    getgenv().EspAdvancedDealer = state
+    -- ESP logic for Advanced Dealer
+end)
+
+-- Section 6: Misc Features
+local Section7 = Tab7:NewSection("TIỆN ÍCH KHÁC")
+
+getgenv().AutoTweenMirage = false
+Section7:NewToggle("Auto Tween To Mirage Island", "Tự động di chuyển đến Mirage Island", function(state)
+    getgenv().AutoTweenMirage = state
+    while getgenv().AutoTweenMirage do
+        pcall(function()
+            local mirage = workspace:FindFirstChild("Mirage Island")
+            if mirage then
+                local player = game.Players.LocalPlayer
+                player.Character.HumanoidRootPart.CFrame = mirage.PrimaryPart.CFrame + Vector3.new(0,50,0)
+            end
+        end)
+        task.wait(1)
+    end
+end)
+
+getgenv().AutoTweenHighest = false
+Section7:NewToggle("Auto Tween To Highest Point", "Đến điểm cao nhất", function(state)
+    getgenv().AutoTweenHighest = state
+    while getgenv().AutoTweenHighest do
+        pcall(function()
+            local player = game.Players.LocalPlayer
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position + Vector3.new(0,1000,0))
+        end)
+        task.wait(0.5)
+    end
+end)
+
+getgenv().AutoTweenFruitDealer = false
+Section7:NewToggle("Auto Tween Advanced Fruit Dealer", "Đến Fruit Dealer", function(state)
+    getgenv().AutoTweenFruitDealer = state
+    while getgenv().AutoTweenFruitDealer do
+        pcall(function()
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v.Name == "Advanced Fruit Dealer" and v:IsA("Model") then
+                    local player = game.Players.LocalPlayer
+                    player.Character.HumanoidRootPart.CFrame = v.PrimaryPart.CFrame
+                end
+            end
+        end)
+        task.wait(1)
+    end
+end)
+
+getgenv().AutoCollectMirageChest = false
+Section7:NewToggle("Auto Collect Mirage Chest", "Nhặt rương Mirage", function(state)
+    getgenv().AutoCollectMirageChest = state
+    while getgenv().AutoCollectMirageChest do
+        pcall(function()
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v.Name == "Mirage Chest" and v:IsA("Part") then
+                    local player = game.Players.LocalPlayer
+                    player.Character.HumanoidRootPart.CFrame = v.CFrame
+                    firetouchinterest(player.Character.HumanoidRootPart, v, 0)
+                    task.wait(0.3)
+                end
+            end
+        end)
+        task.wait(0.5)
+    end
+end)
+
+getgenv().TalkWithStone = false
+Section7:NewToggle("Talk With Stone", "Nói chuyện với đá", function(state)
+    getgenv().TalkWithStone = state
+    while getgenv().TalkWithStone do
+        pcall(function()
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TalkWithStone")
+        end)
+        task.wait(1)
+    end
+end)
+
+getgenv().AutoLookMoonV3 = false
+Section7:NewToggle("Look Moon + Auto V3", "Nhìn trăng + V3", function(state)
+    getgenv().AutoLookMoonV3 = state
+    while getgenv().AutoLookMoonV3 do
+        pcall(function()
+            local moon = workspace:FindFirstChild("Moon")
+            if moon then
+                local player = game.Players.LocalPlayer
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position, moon.Position)
+                -- Activate V3
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("ActivateV3")
+            end
+        end)
+        task.wait(1)
+    end
+end)
+
+-- Section 7: Change Transparency
+getgenv().ChangeTransparency = false
+Section7:NewSlider("Change Transparency", "Độ trong suốt", 100, 0, function(val)
+    local transparency = val / 100
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Transparency = transparency
+        end
+    end
+end)
+
+-- Menu Controls Section
+local Section8 = Tab7:NewSection("MENU CONTROLS")
+
+-- Toggle Menu Button
+Section8:NewButton("Đóng Menu", "Ẩn menu", function()
+    Library:ToggleUI()
+end)
+
+Section8:NewButton("Mở Menu", "Hiện menu", function()
+    Library:ToggleUI()
+end)
+
+-- Keybind để đóng/mở menu
+Section8:NewKeybind("Phím tắt đóng/mở", "Nhấn để đóng/mở menu", Enum.KeyCode.RightShift, function()
+    Library:ToggleUI()
+end)
+
+-- Destroy Menu Button
+Section8:NewButton("Destroy Menu", "Xóa menu hoàn toàn", function()
+    Library:DestroyUI()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Banana Premium",
+        Text = "Đã xóa menu!",
+        Duration = 2
+    })
+end)
+
+-- Thông tin menu
+local Section9 = Tab7:NewSection("THÔNG TIN")
+Section9:NewLabel("Banana Premium v1.0")
+Section9:NewLabel("Credit: Ngọc Bổng Gaming")
+Section9:NewLabel("Phím tắt: RightShift")
+
+-- Thông báo khi load xong
+print("✅ Banana Premium Script Loaded Successfully!")
+print("📌 Nhấn RightShift để mở/đóng menu")
